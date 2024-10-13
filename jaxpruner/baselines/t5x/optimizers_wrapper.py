@@ -46,7 +46,7 @@ def jp_partition_fn(state, params_axes):
           state.inner_state, params_axes
       ),
       count=None,
-      target_sparsities=jax.tree_map(lambda x: None, state.target_sparsities),
+      target_sparsities=jax.tree_util.tree_map(lambda x: None, state.target_sparsities),
       masks=params_axes,
   )
 

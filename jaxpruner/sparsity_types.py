@@ -48,12 +48,17 @@ class Channel(NamedTuple):
   # variable.
   axis: int = -1
 
+class Dormant(NamedTuple):
+  # This channel-wise operations works for the target axis of the corresponding
+  # variable.
+  threshold: float = 0.025
 
-SparsityType = Union[Unstructured, Block, NByM, Channel]
+
+SparsityType = Union[Unstructured, Block, NByM, Channel, Dormant]
 
 
 # TODO following is needed since isintance(obj, SparsityType) fails.
 # TODO check whether there is a better way.
 def is_sparsity_type(instance_to_check):
   """Checks whether given object is a sparsity type."""
-  return type(instance_to_check) in [Unstructured, Block, NByM, Channel]
+  return type(instance_to_check) in [Unstructured, Block, NByM, Channel, Dormant]

@@ -11,16 +11,16 @@ import optax
 def reset_optimizer(state):
   """Resets Adam and SGD state."""
   if isinstance(state, optax.TraceState):
-    new_trace = jax.tree_map(jnp.zeros_like, state.trace)
+    new_trace = jax.tree_util.tree_map(jnp.zeros_like, state.trace)
     state = state._replace(trace=new_trace)
   elif isinstance(state, optax.ScaleByAdamState):
-    new_mu = jax.tree_map(jnp.zeros_like, state.mu)
-    new_nu = jax.tree_map(jnp.zeros_like, state.nu)
+    new_mu = jax.tree_util.tree_map(jnp.zeros_like, state.mu)
+    new_nu = jax.tree_util.tree_map(jnp.zeros_like, state.nu)
     state = state._replace(mu=new_mu, nu=new_nu)
   elif isinstance(state, optax.FactoredState):  # support AdaFactor as well
-    new_v_col = jax.tree_map(jnp.zeros_like, state.v_col)
-    new_v_row = jax.tree_map(jnp.zeros_like, state.v_row)
-    new_v = jax.tree_map(jnp.zeros_like, state.v)
+    new_v_col = jax.tree_util.tree_map(jnp.zeros_like, state.v_col)
+    new_v_row = jax.tree_util.tree_map(jnp.zeros_like, state.v_row)
+    new_v = jax.tree_util.tree_map(jnp.zeros_like, state.v)
     state = state._replace(v_col=new_v_col, v_row=new_v_row, v=new_v)
   elif isinstance(state, (optax.EmptyState, optax.ScaleByScheduleState)):
     return state
@@ -77,7 +77,7 @@ class ACDC(jaxpruner.algorithms.MagnitudePruning):
             scores, updated_sparse_state.target_sparsities
         )
         if self.use_packed_masks:
-          new_masks = jax.tree_map(jnp.packbits, new_masks)
+          new_masks = jax.tree_util.tree_map(jnp.packbits, new_masks)
         ret = updated_sparse_state._replace(masks=new_masks)
         return reset_optimizer(ret) if self.reset_optimizer else ret
 
@@ -92,7 +92,7 @@ class ACDC(jaxpruner.algorithms.MagnitudePruning):
             params, updated_sparse_state.target_sparsities
         )
         if self.use_packed_masks:
-          new_masks = jax.tree_map(jnp.unpackbits, new_masks)
+          new_masks = jax.tree_util.tree_map(jnp.unpackbits, new_masks)
         ret = updated_sparse_state._replace(masks=new_masks)
         return reset_optimizer(ret) if self.reset_optimizer else ret
 

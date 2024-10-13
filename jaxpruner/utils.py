@@ -36,8 +36,8 @@ def summarize_sparsity(
   Returns:
     A dict summarizing the sparsity of each parameter.
   """
-  non_zeros = jax.tree_map(jnp.count_nonzero, param_tree)
-  sizes = jax.tree_map(jnp.size, param_tree)
+  non_zeros = jax.tree_util.tree_map(jnp.count_nonzero, param_tree)
+  sizes = jax.tree_util.tree_map(jnp.size, param_tree)
 
   # Cast to float to avoid overflow errors on very large models
   sparsity_fn = lambda nnz, size: (1 - jnp.float32(nnz) / jnp.float32(size))
@@ -45,7 +45,7 @@ def summarize_sparsity(
   if only_total_sparsity:
     summary_dict = {}
   else:
-    sparsities = jax.tree_map(sparsity_fn, non_zeros, sizes)
+    sparsities = jax.tree_util.tree_map(sparsity_fn, non_zeros, sizes)
     if isinstance(sparsities, list):
       summary_dict = dict([(str(k), v) for (k, v) in enumerate(sparsities)])
     else:
@@ -87,8 +87,8 @@ def summarize_intersection(
       return 0
     return jnp.sum((a == 1) & (b == 1))
 
-  intersections = jax.tree_map(intersection_fn, mask_tree1, mask_tree2)
-  ones = jax.tree_map(lambda a: 0 if a is None else jnp.sum(a), mask_tree1)
+  intersections = jax.tree_util.tree_map(intersection_fn, mask_tree1, mask_tree2)
+  ones = jax.tree_util.tree_map(lambda a: 0 if a is None else jnp.sum(a), mask_tree1)
 
   def _safe_division(a, b):
     b = jnp.maximum(b, 1)
@@ -97,7 +97,7 @@ def summarize_intersection(
   if only_total_intersection:
     summary_dict = {}
   else:
-    relative_intersections = jax.tree_map(_safe_division, intersections, ones)
+    relative_intersections = jax.tree_util.tree_map(_safe_division, intersections, ones)
     if isinstance(mask_tree1, list):
       summary_dict = dict(
           [(str(k), v) for (k, v) in enumerate(relative_intersections)]

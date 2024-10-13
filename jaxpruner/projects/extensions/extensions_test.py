@@ -37,7 +37,7 @@ class ExtensionsTest(parameterized.TestCase, absltest.TestCase):
     grads = {'w': jnp.array([5, 1, 3, 0.5])}
     adamstate = adam_fisher.find_adamstate(state.inner_state)
     adamstate = adamstate._replace(mu=grads)
-    adamstate = adamstate._replace(nu=jax.tree_map(lambda g: g**2, grads))
+    adamstate = adamstate._replace(nu=jax.tree_util.tree_map(lambda g: g**2, grads))
     state = state._replace(
         inner_state=adam_fisher.replace_adamstate(state.inner_state, adamstate)
     )
@@ -55,10 +55,10 @@ class ExtensionsTest(parameterized.TestCase, absltest.TestCase):
     _, state = tx.update(grads, state, params)
     adamstate = adam_fisher.find_adamstate(state.inner_state)
     chex.assert_trees_all_close(
-        adamstate.mu, jax.tree_map(jnp.zeros_like, params)
+        adamstate.mu, jax.tree_util.tree_map(jnp.zeros_like, params)
     )
     chex.assert_trees_all_close(
-        adamstate.nu, jax.tree_map(jnp.zeros_like, params)
+        adamstate.nu, jax.tree_util.tree_map(jnp.zeros_like, params)
     )
 
   def testACDC(self):

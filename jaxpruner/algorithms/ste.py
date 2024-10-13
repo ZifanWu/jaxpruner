@@ -44,7 +44,7 @@ class SteMixin:
       self, params, target_sparsities
   ):
     del target_sparsities
-    return jax.tree_map(lambda p: None, params)
+    return jax.tree_util.tree_map(lambda p: None, params)
 
   def update_state(self, sparse_state, params, grads):
     """Identity operation, returns the state unmodified."""

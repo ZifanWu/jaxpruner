@@ -53,7 +53,7 @@ class StaticRandomSparse(base_updater.BaseUpdater):
 
 def _restart_using_mask(target_tree, masks):
   # Set values to zero where mask is 1.
-  return jax.tree_map(
+  return jax.tree_util.tree_map(
       lambda a, m: a if m is None else a * (1 - m), target_tree, masks
   )
 
@@ -130,7 +130,7 @@ class SET(StaticRandomSparse):
 
   def _get_drop_scores(self, sparse_state, params, grads):
     del sparse_state, grads
-    return jax.tree_map(jnp.abs, params)
+    return jax.tree_util.tree_map(jnp.abs, params)
 
   def _get_grow_scores(self, sparse_state, params, grads):
     new_rng = jax.random.fold_in(self.rng_seed, sparse_state.count)
@@ -145,10 +145,10 @@ class SET(StaticRandomSparse):
     update_masks_fn = functools.partial(
         self._update_masks, drop_fraction=current_drop_fraction
     )
-    new_masks = jax.tree_map(
+    new_masks = jax.tree_util.tree_map(
         update_masks_fn, sparse_state.masks, drop_scores, grow_scores
     )
-    masks_activated = jax.tree_map(
+    masks_activated = jax.tree_util.tree_map(
         lambda old_mask, new_mask: (old_mask == 0) & (new_mask == 1),
         sparse_state.masks,
         new_masks,
@@ -168,4 +168,4 @@ class RigL(SET):
 
   def _get_grow_scores(self, sparse_state, params, grads):
     del sparse_state, params
-    return jax.tree_map(jnp.abs, grads)
+    return jax.tree_util.tree_map(jnp.abs, grads)

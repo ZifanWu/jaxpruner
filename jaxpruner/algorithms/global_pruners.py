@@ -48,7 +48,7 @@ class GlobalPruningMixin:
       )
     masks = self.create_masks(params, 0.0)
     if self.use_packed_masks:
-      masks = jax.tree_map(jnp.packbits, masks)
+      masks = jax.tree_util.tree_map(jnp.packbits, masks)
     # Global sparsity only needs global target sparsity.
     return base_updater.SparseState(
         masks=masks,
@@ -64,7 +64,7 @@ class GlobalPruningMixin:
     scores = self.calculate_scores(params, grads=grads)
     masks = self.create_masks(scores, self.sparsity)
     if self.use_packed_masks:
-      masks = jax.tree_map(jnp.packbits, masks)
+      masks = jax.tree_util.tree_map(jnp.packbits, masks)
     return self.apply_masks(params, masks, is_packed=False), masks
 
   def create_masks(self, scores, target_sparsity):

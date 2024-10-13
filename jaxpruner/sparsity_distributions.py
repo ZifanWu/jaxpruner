@@ -73,7 +73,7 @@ def uniform(
     return _get_sparsity(('kernel',), params)
 
   elif isinstance(params, list):
-    return jax.tree_map(lambda p: _get_sparsity('', p), params)
+    return jax.tree_util.tree_map(lambda p: _get_sparsity('', p), params)
 
   flat_dict = flax.traverse_util.flatten_dict(params)
   res_dict = {}

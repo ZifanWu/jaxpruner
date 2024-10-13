@@ -108,7 +108,7 @@ class PolynomialSchedule(PeriodicSchedule):
       progress = jnp.clip((step + 1 - start), 0, length).astype(float)
       progress = progress / length
     logging.info('Calculating new sparsity, %s, %s', step, progress)
-    return jax.tree_map(
+    return jax.tree_util.tree_map(
         lambda t: decay_fn(progress, t, self.power), target_sparsities
     )
 

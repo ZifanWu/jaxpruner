@@ -40,6 +40,7 @@ ALGORITHM_REGISTRY = {
     'static_sparse': algorithms.StaticRandomSparse,
     'rigl': algorithms.RigL,
     'set': algorithms.SET,
+    'activation': algorithms.ActivationPruning,
 }
 ALGORITHMS = tuple(ALGORITHM_REGISTRY.keys())
 
@@ -160,6 +161,10 @@ def create_updater_from_config(
       axis = int(s_type.split('_')[1])
       del config.sparsity_type
       config.sparsity_type = sparsity_types.Channel(axis=axis)
+    elif isinstance(s_type, str) and (s_type.startswith('dormant')):
+      threshold = float(s_type.split('_')[1])
+      del config.sparsity_type
+      config.sparsity_type = sparsity_types.Dormant(threshold=threshold)
     else:
       raise ValueError(f'Sparsity type {s_type} is not supported.')
 

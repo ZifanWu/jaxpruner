@@ -123,7 +123,7 @@ class SparseTrainerTest(parameterized.TestCase, absltest.TestCase):
     # Set trace to ones.
     acc_state = opt_state.inner_state[0]
     new_values = {
-        k: jax.tree_map(jnp.ones_like, getattr(acc_state, k)) for k in acc_names
+        k: jax.tree_util.tree_map(jnp.ones_like, getattr(acc_state, k)) for k in acc_names
     }
     inner_state = (acc_state._replace(**new_values), *opt_state.inner_state[1:])
     opt_state = opt_state._replace(inner_state=inner_state)

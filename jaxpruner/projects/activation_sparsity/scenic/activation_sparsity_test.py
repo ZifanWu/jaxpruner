@@ -55,7 +55,7 @@ class ActivationSparsityTest(parameterized.TestCase, absltest.TestCase):
 
     params = model.init(rng, preactivation)
     # Make params all positive so that activations stay positive.
-    params = jax.tree_map(jnp.abs, params)
+    params = jax.tree_util.tree_map(jnp.abs, params)
     outputs = model.apply(params, preactivation)
     for out in outputs:
       self.assertEqual(jnp.sum(out == 0), 0)

@@ -68,7 +68,7 @@ class IterativeNMPruning(BaseUpdater):
 
   def calculate_scores(self, params, sparse_state=None, grads=None):
     del sparse_state, grads
-    param_magnitudes = jax.tree_map(jnp.abs, params)
+    param_magnitudes = jax.tree_util.tree_map(jnp.abs, params)
     return param_magnitudes
 
 

@@ -59,6 +59,10 @@ def get_topk_fn(sparsity_type):
     return functools.partial(
         topk_channel_mask_calculator, sparsity_type=sparsity_type
     )
+  elif isinstance(sparsity_type, sparsity_types.Dormant):
+    return functools.partial(
+        dormant_mask_calculator, threshold=sparsity_type.threshold
+    )
   else:
     raise ValueError(f'Not a supported sparsity type: {sparsity_type}')
 
@@ -307,4 +311,36 @@ def topk_mask_calculator(scores, sparsity):
       _topk_mask_calculator_internal,
       scores,
       sparsity,
+  )
+
+
+@jax.jit
+def _dormant_mask_calculator_internal(scores, threshold):
+  """Creates a binary mask of same shape and type of scores, given sparsity."""
+  # flat_scores = jnp.reshape(scores, -1)
+  # num_ones = jnp.round(flat_scores.size * (1 - sparsity)).astype(int)
+  # num_ones = jnp.maximum(1, num_ones)
+
+  # topk_index = jnp.argsort(-flat_scores)[num_ones - 1]
+  # topk_threshold = flat_scores[topk_index]
+  mask_by_value = scores >= threshold
+
+  return mask_by_value.astype(MASK_DTYPE)
+
+def dormant_mask_calculator(scores, sparsity, threshold):
+  """Given a tensor of scores creates a binary mask.
+
+  Args:
+    scores: top-scores are kept
+    sparsity: of the generated mask.
+
+  Returns:
+    array, same shape and type as scores.
+  """
+  return jax.lax.cond(
+      sparsity == 0,
+      lambda scores, _: jnp.ones_like(scores, dtype=MASK_DTYPE),
+      _dormant_mask_calculator_internal,
+      scores,
+      threshold,
   )

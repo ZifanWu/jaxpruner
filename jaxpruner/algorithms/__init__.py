@@ -21,6 +21,7 @@ from jaxpruner.algorithms.global_pruners import GlobalSaliencyPruning
 from jaxpruner.algorithms.pruners import MagnitudePruning
 from jaxpruner.algorithms.pruners import RandomPruning
 from jaxpruner.algorithms.pruners import SaliencyPruning
+from jaxpruner.algorithms.pruners import ActivationPruning
 from jaxpruner.algorithms.sparse_trainers import RigL
 from jaxpruner.algorithms.sparse_trainers import SET
 from jaxpruner.algorithms.sparse_trainers import StaticRandomSparse

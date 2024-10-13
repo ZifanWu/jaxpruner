@@ -61,7 +61,7 @@ class AdamBasedFisherPruning(jaxpruner.BaseUpdater):
     adamstate = find_adamstate(sparse_state.inner_state)
     if adamstate is None:
       raise ValueError('No Adam state found.')
-    scores = jax.tree_map(lambda p, nu: p**2 * nu, params, adamstate.nu)
+    scores = jax.tree_util.tree_map(lambda p, nu: p**2 * nu, params, adamstate.nu)
     del sparse_state
     return scores
 
@@ -70,8 +70,8 @@ class AdamBasedFisherPruning(jaxpruner.BaseUpdater):
     if self.reset_adam:
       adamstate = find_adamstate(sparse_state.inner_state)
       adamstate = adamstate._replace(
-          mu=jax.tree_map(jnp.zeros_like, adamstate.mu),
-          nu=jax.tree_map(jnp.zeros_like, adamstate.nu),
+          mu=jax.tree_util.tree_map(jnp.zeros_like, adamstate.mu),
+          nu=jax.tree_util.tree_map(jnp.zeros_like, adamstate.nu),
       )
       sparse_state = sparse_state._replace(
           inner_state=replace_adamstate(sparse_state.inner_state, adamstate)
