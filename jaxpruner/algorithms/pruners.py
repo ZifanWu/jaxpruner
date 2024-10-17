@@ -26,23 +26,11 @@ from jaxpruner import sparsity_types
 
 BaseUpdater = base_updater.BaseUpdater
 
-def estimate_neuron_score(params, activations_dict, prune_layers):
-  def estimate_single_layer_neuron_scores(activation):
-    reduce_axes = list(range(activation.ndim - 1))
-    score = jnp.mean(jnp.abs(activation), axis=reduce_axes)
-    score /= jnp.mean(score) + 1e-9
-    return score
-
-  param_dict = flax.traverse_util.flatten_dict(params, sep='/')
-  for i, layer_name in enumerate(prune_layers):
-    param_key = 'params/' + layer_name + '/kernel'
-    activation = activations_dict[layer_name + '_act/__call__'][0]
-    score = estimate_single_layer_neuron_scores(activation)
-    # print(score.shape, param_dict[param_key].shape) # (32,) (8, 8, 4, 32); (512,) (7744, 512)
-    # So we only prune incoming weights of dormant neurons?
-    # Yes or no, it's basically the same since after masking the incoming weights the outgoing weights become useless.
-    param_dict[param_key] = score
-  return params
+def estimate_neuron_score(activation):
+  reduce_axes = list(range(activation.ndim - 1))
+  score = jnp.mean(jnp.abs(activation), axis=reduce_axes)
+  score /= jnp.mean(score) + 1e-9   
+  return score
 
 @dataclasses.dataclass
 class ActivationPruning(BaseUpdater):
@@ -51,23 +39,26 @@ class ActivationPruning(BaseUpdater):
 
   def calculate_scores(self, params, sparse_state=None, grads=None):
     del sparse_state, grads
-    scores = estimate_neuron_score(params, self.activations_dict, self.prune_layers)
-    return scores
+    scores = jax.tree_util.tree_map(estimate_neuron_score, self.intermediates)
+    param_dict = flax.traverse_util.flatten_dict(params, sep='/')
+    score_dict = flax.traverse_util.flatten_dict(scores, sep='/')
+    for k in self.prune_layers:
+      param_dict['params/' + k + '/kernel'] = score_dict[k + '_act/__call__'][0]
+    return params
 
   def pre_forward_update(
-      self, activations_dict, prune_layers, opt_state
+      self, intermediates, prune_layers, opt_state
   ):
     """Used to transform paramaters before forward pass."""
     del opt_state
-    self.activations_dict = activations_dict
+    self.intermediates = intermediates
     self.prune_layers = prune_layers
 
   def create_masks(self, scores, sparsities):
     def topk_ifnot_none(score, sparsity):
-      self.topk_fn = functools.partial(self.topk_fn, )
+      # self.topk_fn = functools.partial(self.topk_fn, )
       return None if sparsity is None else self.topk_fn(score, sparsity)
     return jax.tree_util.tree_map(topk_ifnot_none, scores, sparsities)
-    # return self.topk_fn(scores, self.threshold)
 
   def wrap_optax(
       self, inner
@@ -96,10 +87,10 @@ class ActivationPruning(BaseUpdater):
       sparse_state = sparse_state._replace(inner_state=inner.init(params))
       return sparse_state
 
-    def update_fn(updates, state, params, is_reset, **kwargs):
+    def update_fn(updates, state, params, is_prune, **kwargs):
       is_update_step = self.scheduler.is_mask_update_iter(state.count)
       no_update_op = lambda state, *_: state
-      if isinstance(is_reset, bool) and is_reset:
+      if isinstance(is_prune, bool) and is_prune:
         new_state = jax.lax.cond(
             is_update_step,
             functools.partial(self.update_state, **kwargs),
